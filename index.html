@@ -1,19 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./style.css" />
-    <title>Document</title>
+    <title>블러그</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
-    <div id="root">
-      <h1>블러그</h1>
-      <form action="/name" method="post">
-        <input type="text" name="name" placeholder="이름을 입력하세요" />
-        <button type="submit">입력</button>
-      </form>
-    </div>
-    <script src="./index.js"></script>
+    <header>
+      <h1>Subject.4</h1>
+      <nav>
+        <ul>
+          <li><a href="#home">홈</a></li>
+          <li><a href="#CRUD">CRUD</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main>
+      <section id="home"></section>
+      <section id="CRUD">
+        <h2>목록</h2>
+        <ul></ul>
+      </section>
+    </main>
+    <footer>
+      <p></p>
+    </footer>
   </body>
 </html>
