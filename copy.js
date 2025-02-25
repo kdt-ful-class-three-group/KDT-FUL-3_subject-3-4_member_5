@@ -127,7 +127,7 @@ const server = http.createServer((req, res) => {
       };
       posts.push(newPost);
       savePosts(posts);
-
+      //크롬 네트워크 create의 상태가 302이라고 나온게 요청이 끝나면 302로 "/"으로 다시 돌아가서 http://localhost/로 다시 요청하는 방식이다.
       res.writeHead(302, { Location: "/" });
       res.end();
     });
