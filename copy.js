@@ -39,6 +39,7 @@ const server = http.createServer((req, res) => {
     posts.forEach((post) => {
       html += `<li><a href="/post/${post.id}">${post.title}</a></li>`;
     });
+
     html += "</ul>";
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(html);
