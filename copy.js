@@ -19,3 +19,8 @@ function loadPosts() {
 function savePosts(posts) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2));
 }
+
+function validatePostData(title, content) {
+  if (!title || !content) return "제목과 내용을 입력하세요.";
+  if (title.length > 100) return "제목은 100자 이내여야 합니다.";
+}
