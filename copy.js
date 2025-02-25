@@ -36,10 +36,10 @@ const server = http.createServer((req, res) => {
       <ul>
         <a href="/new">새 글 작성</a>
       </ul>`;
-    posts.forEach((post) => {
-      html += `<li><a href="/post/${post.id}">${post.title}</a></li>`;
-    });
-
+    //gpt를 사용 해서 가져온 코드인데 나였으면 forEach을 사용하지않고 for문을 사용했을거 같아 다시 코딩해보고 작동결과 똑같이 작동하는 걸 확인
+    for (let i = 0; i < posts.length; i++) {
+      html += `<li><a href="/post/${posts[i].id}">${posts[i].title}</a></li>`;
+    }
     html += "</ul>";
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(html);
