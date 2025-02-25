@@ -1,10 +1,11 @@
 const http = require("http");
 const fs = require("fs");
-const url = require("url");
+const path = require("path");
+const querystring = require("querystring");
 
-const DATA_FILE = "posts.json";
+const DATA_FILE = path.join(__dirname, "posts.json");
+
 // 데이터 불러오기
-//if문으로 fs. existsSync함수를 활용하여 DATA_FILE에 파일이 있나 없나 확인 있으면 코드 작동  없으면 []을 반환 하여 함수 종료
 // 기존 함수에서 !을 빼고 내가 보기 편하게 변경함
 function loadPosts() {
   if (fs.existsSync(DATA_FILE)) {
@@ -19,11 +20,13 @@ function loadPosts() {
 function savePosts(posts) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2));
 }
+
 // 데이터 유효성 검사 함수
 //title와 content을 받아와 둘중에 하나하도 내용이 없으면 return을 실행 시키고 .length을 사용 하여 100자이내로 쓰는지 유효성 검사 하는 함수
 function validatePostData(title, content) {
   if (!title || !content) return "제목과 내용을 입력하세요.";
   if (title.length > 100) return "제목은 100자 이내여야 합니다.";
+  return null;
 }
 
 const server = http.createServer((req, res) => {
@@ -42,18 +45,18 @@ const server = http.createServer((req, res) => {
     }
     html += "</ul>";
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    //정상 작동하면 htnl를 열어라
+    //정상 작동하면 html를 열어라
     res.end(html);
   } else if (url === "/new" && method === "GET") {
     // 글 작성 페이지
     const html = `
-            <h1>새 글 작성</h1>
-            <form method="POST" action="/create">
-                <input type="text" name="title" placeholder="제목" required /><br>
-                <textarea name="content" placeholder="내용" required></textarea><br>
-                <button type="submit">작성</button>
-            </form>
-        `;
+              <h1>새 글 작성</h1>
+              <form method="POST" action="/create">
+                  <input type="text" name="title" placeholder="제목" required /><br>
+                  <textarea name="content" placeholder="내용" required></textarea><br>
+                  <button type="submit">작성</button>
+              </form>
+          `;
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(html);
   } else if (url.startsWith("/post/") && method === "GET") {
@@ -64,13 +67,13 @@ const server = http.createServer((req, res) => {
 
     if (post) {
       const html = `
-                <h1>${post.title}</h1>
-                <p>${post.content}</p>
-                <p><small>작성일: ${new Date(
-                  post.createdAt
-                ).toLocaleString()}</small></p>
-                <a href="/">홈으로</a>
-            `;
+                  <h1>${post.title}</h1>
+                  <p>${post.content}</p>
+                  <p><small>작성일: ${new Date(
+                    post.createdAt
+                  ).toLocaleString()}</small></p>
+                  <a href="/">홈으로</a>
+              `;
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       res.end(html);
     } else {
@@ -115,4 +118,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
     res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
   }
+});
+
+server.listen(8000, () => {
+  console.log("서버 실행 중: http://localhost:8000");
 });
