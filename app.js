@@ -1,135 +1,103 @@
 const http = require("http");
 const fs = require("fs");
-const url = require("url");
-const parse = require("querystring");
+const path = require("path");
+const querystring = require("querystring");
 
-const DATA_FILE = "posts.json"; // 블로그 데이터 저장 파일
+const DATA_FILE = path.join(__dirname, "posts.json");
 
-// 파일에서 데이터 읽기
-function readData() {
-  if (!fs.existsSync(DATA_FILE)) return [];
-  const data = fs.readFileSync(DATA_FILE, "utf8");
-  return data ? JSON.parse(data) : [];
+function loadPosts() {
+  if (fs.existsSync(DATA_FILE)) {
+    const data = fs.readFileSync(DATA_FILE, "utf-8");
+    return data ? JSON.parse(data) : [];
+  } else {
+    return [];
+  }
+}
+function savePosts(posts) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2));
+}
+function validatePostData(title, content) {
+  if (!title || !content) return "제목과 내용을 입력하세요.";
+  if (title.length > 100) return "제목은 100자 이내여야 합니다.";
+  return null;
 }
 
-// 파일에 데이터 저장
-function writeData(posts) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(posts, null, 2), "utf8");
-}
-
-// 서버 생성
 const server = http.createServer((req, res) => {
-  const { pathname, query } = url.parse(req.url, true);
-
-  // CORS 설정 (프론트엔드와 연동 시 필요)
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // OPTIONS 요청 처리 (CORS Preflight)
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    return res.end();
-  }
-
-  //  1. 전체 게시글 조회 (GET /posts)
-  if (req.method === "GET" && pathname === "/posts") {
-    const posts = readData();
-    res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify(posts));
-  }
-
-  //  2. 게시글 추가 (POST /posts)
-  // if (req.method === "POST" && pathname === "/posts") {
-  //   let body = "";
-  //   req.on("data", (chunk) => (body += chunk));
-  //   req.on("end", () => {
-  //     const newPost = JSON.parse(body);
-  //     const posts = readData();
-  //     newPost.id = Date.now(); // 고유 ID 부여
-  //     posts.push(newPost);
-  //     writeData(posts);
-  //     res.writeHead(201, { "Content-Type": "application/json" });
-  //     res.end(JSON.stringify(newPost));
-  //   });
-  // }
-  //  2. 게시글 추가 (POST /posts)
-  if (req.method === "POST" && pathname === "/posts") {
+  const { method, url } = req;
+  if (url === "/" && method === "GET") {
+    const posts = loadPosts();
+    let html = `<h1>블로그</h1>
+      <ul>
+        <a href="/new">새 글 작성</a>
+      </ul>`;
+    for (let i = 0; i < posts.length; i++) {
+      html += `<li><a href="/post/${posts[i].id}">${posts[i].title}</a></li>`;
+    }
+    html += "</ul>";
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(html);
+  } else if (url === "/new" && method === "GET") {
+    const html = `
+              <h1>새 글 작성</h1>
+              <form method="POST" action="/create">
+                  <input type="text" name="title" placeholder="제목" required /><br>
+                  <textarea name="content" placeholder="내용" required></textarea><br>
+                  <button type="submit">작성</button>
+              </form>
+          `;
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(html);
+  } else if (url.startsWith("/post/") && method === "GET") {
+    const postId = parseInt(url.split("/")[2]);
+    const posts = loadPosts();
+    const post = posts.find((p) => p.id === postId);
+    if (post) {
+      const html = `
+                  <h1>${post.title}</h1>
+                  <p>${post.content}</p>
+                  <p><small>작성일: ${new Date(
+                    post.createdAt
+                  ).toLocaleString()}</small></p>
+              `;
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(html);
+    } else {
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
+    }
+  } else if (url === "/create" && method === "POST") {
     let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      try {
-        const newPost = JSON.parse(body);
-        const posts = readData();
-        newPost.id = Date.now();
-        posts.push(newPost);
-        writeData(posts);
-        res.writeHead(201, { "Content-Type": "application/json" });
-        res.end(JSON.stringify(newPost));
-      } catch (error) {
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Internal Server Error" }));
-        }
-      }
+    req.on("data", (chunk) => {
+      body += chunk.toString();
     });
-  }
-
-  //  3. 게시글 수정 (PUT /posts?id=123)
-  // if (req.method === "PUT" && pathname === "/posts") {
-  //   const postId = Number(query.id);
-  //   let body = "";
-  //   req.on("data", (chunk) => (body += chunk));
-  //   req.on("end", () => {
-  //     const updatedPost = JSON.parse(body);
-  //     let posts = readData();
-  //     posts = posts.map((post) =>
-  //       post.id === postId ? { ...post, ...updatedPost } : post
-  //     );
-  //     writeData(posts);
-  //     res.writeHead(200, { "Content-Type": "application/json" });
-  //     return res.end(JSON.stringify({ message: "Post updated" }));
-  //   });
-  // }
-  if (req.method === "PUT" && pathname === "/posts") {
-    const postId = Number(query.id);
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
     req.on("end", () => {
-      try {
-        const updatedPost = JSON.parse(body);
-        let posts = readData();
-        posts = posts.map((post) =>
-          post.id === postId ? { ...post, ...updatedPost } : post
+      const postData = querystring.parse(body);
+      const { title, content } = postData;
+
+      const validationError = validatePostData(title, content);
+      if (validationError) {
+        res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(
+          `<h1>입력 오류</h1><p>${validationError}</p><a href="/new">다시 작성</a>`
         );
-        writeData(posts);
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ message: "Post updated" }));
-      } catch (error) {
-        if (!res.headersSent) {
-          res.writeHead(500, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ error: "Internal Server Error" }));
-        }
+        return;
       }
+      const posts = loadPosts();
+      const newPost = {
+        id: posts.length > 0 ? posts[posts.length - 1].id + 1 : 1,
+        title,
+        content,
+        createdAt: new Date().toISOString(),
+      };
+      posts.push(newPost);
+      savePosts(posts);
+      res.writeHead(302, { Location: "/" });
+      res.end();
     });
+  } else {
+    res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+    res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
   }
-
-  //  4. 게시글 삭제 (DELETE /posts?id=123)
-  if (req.method === "DELETE" && pathname === "/posts") {
-    const postId = Number(query.id);
-    let posts = readData();
-    posts = posts.filter((post) => post.id !== postId);
-    writeData(posts);
-    res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify({ message: "Post deleted" }));
-  }
-
-  //  404 처리
-  res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ error: "Not Found" }));
 });
 
 server.listen(8000, () => {

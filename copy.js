@@ -41,7 +41,9 @@ const server = http.createServer((req, res) => {
       </ul>`;
     //gpt를 사용 해서 가져온 코드인데 나였으면 forEach을 사용하지않고 for문을 사용했을거 같아 다시 코딩해보고 작동결과 똑같이 작동하는 걸 확인
     for (let i = 0; i < posts.length; i++) {
-      html += `<li><a href="/post/${posts[i].id}">${posts[i].title}</a></li>`;
+      html += `<li><a href="/post/${posts[i].id}">${posts[i].title}</a></li>
+                <a href="/edit/${posts[i].id}">[수정]</a> 
+                <a href="/delete/${posts[i].id}">[삭제]</a></li>`;
     }
     html += "</ul>";
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
@@ -96,10 +98,13 @@ const server = http.createServer((req, res) => {
       res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
     }
   }
-  //
+  //  /create 주소로 들어노는 POST요청을 처리 시작 html에서 submit버튼을 누르면
+  // 요청을 받아서 처리하는 부분
+  // 글 작성 처리
   else if (url === "/create" && method === "POST") {
-    // 글 작성 처리
+    //요청 본문을 저장할 변수
     let body = "";
+    //chunk는 클라이언트가 보낸 요청데이터 부분적인 느낌
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
@@ -116,7 +121,6 @@ const server = http.createServer((req, res) => {
         );
         return;
       }
-
       // 새 글 추가
       const posts = loadPosts();
       const newPost = {
@@ -131,6 +135,56 @@ const server = http.createServer((req, res) => {
       res.writeHead(302, { Location: "/" });
       res.end();
     });
+  }
+  // 글 수정 페이지
+  else if (url.startsWith("/edit/") && method === "GET") {
+    const postId = parseInt(url.split("/")[2]);
+    const posts = loadPosts();
+    const post = posts.find((p) => p.id === postId);
+    if (post) {
+      const html = `
+                  <h1>글 수정</h1>
+                  <form method="POST" action="/update/${post.id}">
+                      <input type="text" name="title" value="${post.title}" required /><br>
+                      <textarea name="content" required>${post.content}</textarea><br>
+                      <button type="submit">수정</button>
+                  </form>
+              `;
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(html);
+    } else {
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
+    }
+  }
+  // 글 수정 처리
+  else if (url.startsWith("/update/") && method === "POST") {
+    const postId = parseInt(url.split("/")[2]);
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    req.on("end", () => {
+      const postData = querystring.parse(body);
+      const { title, content } = postData;
+      const posts = loadPosts();
+      const postIndex = posts.findIndex((p) => p.id === postId);
+      if (postIndex !== -1) {
+        posts[postIndex].title = title;
+        posts[postIndex].content = content;
+        savePosts(posts);
+      }
+      res.writeHead(302, { Location: "/" });
+      res.end();
+    });
+  }
+  // 글 삭제 처리
+  else if (url.startsWith("/delete/") && method === "GET") {
+    const postId = parseInt(url.split("/")[2]);
+    const posts = loadPosts().filter((p) => p.id !== postId);
+    savePosts(posts);
+    res.writeHead(302, { Location: "/" });
+    res.end();
   } else {
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
     res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
