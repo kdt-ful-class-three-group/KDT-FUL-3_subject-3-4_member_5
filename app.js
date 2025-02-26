@@ -1,3 +1,4 @@
+//gtp 원본 코드
 const http = require("http");
 const fs = require("fs");
 const path = require("path");

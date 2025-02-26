@@ -104,15 +104,24 @@ const server = http.createServer((req, res) => {
   else if (url === "/create" && method === "POST") {
     //요청 본문을 저장할 변수
     let body = "";
-    //chunk는 클라이언트가 보낸 요청데이터 부분적인 느낌
+    //chunk는 클라이언트가 보낸 요청데이터를 조각조각 받아 대입 하는부분
     req.on("data", (chunk) => {
       body += chunk.toString();
     });
     req.on("end", () => {
+      //요청 데이터가 잘들어가나 확인
+      console.log("받은 데이터 :", body);
+      //querystring은 문자열을 객체로 변환 시켜주는 도구
       const postData = querystring.parse(body);
+      //querystring.parse()로 어떻게 변화는지 확인
+      console.log("변환 데이터 :", postData);
+      //구조 분해 할당 활용
+      //각각 받은 데이터 속 title, content를 변수 title, content 담는 부분
       const { title, content } = postData;
-
       // 데이터 유효성 검사
+      // 받은 데이터를 validatePostData()함수에다가 넣어 이상이 없으면
+      // null값을 받아 if문이 작동이 안되며 이상이 있어 if문이 실행이 되면
+      // res.end의 html에 함수에 전달 받은 값을 ${validationError}에 값을 전달한다.
       const validationError = validatePostData(title, content);
       if (validationError) {
         res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
@@ -124,6 +133,11 @@ const server = http.createServer((req, res) => {
       // 새 글 추가
       const posts = loadPosts();
       const newPost = {
+        //새글에 id을 넣어주는 방법
+        //posts.length > 0은 저장한 데이터가 있는지 확인 하는 부분
+        //데이터가 없으면 id가 1이 되는부분
+        //있으면 posts[posts.length-1](posts.length의 -1하는 이유는 배열 때문에)
+        //기존에 있는 아이디에 +1 하여 순서대로 id값이 들어가게 했습니다.
         id: posts.length > 0 ? posts[posts.length - 1].id + 1 : 1,
         title,
         content,
