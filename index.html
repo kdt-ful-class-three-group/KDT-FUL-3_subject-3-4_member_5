@@ -20,65 +20,9 @@
     </header>
     <div class="container">
       <h2>블로그 게시판</h2>
-      <input type="text" id="title" placeholder="제목" />
-      <textarea id="content" placeholder="내용"></textarea>
-      <button onclick="addPost()">게시글 추가</button>
-      <div id="posts"></div>
     </div>
 
-    <script>
-      const API_URL = "http://localhost:8000/posts";
-
-      async function fetchPosts() {
-        const res = await fetch(API_URL);
-        const posts = await res.json();
-        const postsContainer = document.getElementById("posts");
-        postsContainer.innerHTML = "";
-        posts.forEach((post) => {
-          postsContainer.innerHTML += `
-                    <div class="post" id="post-${post.id}">
-                        <h3>${post.title}</h3>
-                        <p>${post.content}</p>
-                        <button onclick="editPost(${post.id})">수정</button>
-                        <button onclick="deletePost(${post.id})">삭제</button>
-                    </div>
-                `;
-        });
-      }
-
-      async function addPost() {
-        const title = document.getElementById("title").value;
-        const content = document.getElementById("content").value;
-        await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, content }),
-        });
-        fetchPosts();
-      }
-
-      async function editPost(id) {
-        const newTitle = prompt("새 제목을 입력하세요");
-        const newContent = prompt("새 내용을 입력하세요");
-        if (newTitle && newContent) {
-          await fetch(`${API_URL}?id=${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: newTitle, content: newContent }),
-          });
-          fetchPosts();
-        }
-      }
-
-      async function deletePost(id) {
-        if (confirm("정말 삭제하시겠습니까?")) {
-          await fetch(`${API_URL}?id=${id}`, { method: "DELETE" });
-          fetchPosts();
-        }
-      }
-
-      fetchPosts();
-    </script>
+    <script></script>
     <footer>
       <p></p>
     </footer>
