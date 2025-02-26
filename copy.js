@@ -42,7 +42,7 @@ const server = http.createServer((req, res) => {
     //gpt를 사용 해서 가져온 코드인데 나였으면 forEach을 사용하지않고 for문을 사용했을거 같아 다시 코딩해보고 작동결과 똑같이 작동하는 걸 확인
     for (let i = 0; i < posts.length; i++) {
       html += `<li><a href="/post/${posts[i].id}">${posts[i].title}</a></li>
-                <a href="/edit/${posts[i].id}">[수정]</a> 
+                <a href="/edit/${posts[i].id}">[수정]</a>
                 <a href="/delete/${posts[i].id}">[삭제]</a></li>`;
     }
     html += "</ul>";
@@ -82,6 +82,7 @@ const server = http.createServer((req, res) => {
     //게시글을 찾았다는 의미
     if (post) {
       //post안에 있는 title와 content을 가져와서 html식으로 보여준다.
+      // const MAIN_PAGE = fs.readFileSync("index.html")
       const html = `
                   <h1>${post.title}</h1>
                   <p>${post.content}</p>
