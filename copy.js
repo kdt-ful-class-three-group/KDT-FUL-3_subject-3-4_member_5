@@ -143,7 +143,15 @@ const server = http.createServer((req, res) => {
         content,
         createdAt: new Date().toISOString(),
       };
+      //push()함수로 배열에 새로운 데이터를 축가하는 부분
+      //newPost를 posts에 추가한다.
+      //이 부분에 데이터가 title나 content가 데이터가 없으면 ""로 들어가지만
+      //문제가 없이 돌아간다 하지만 앞에 데이터 유효성 검사 했으므로 데이터가 있다.
       posts.push(newPost);
+      //savePosts(posts); 을 사용하지 않으면 무슨 문제가 생기는지
+      //push로 붙인 부분은 데이터가 사라지기 때문에
+      //push는 데이터만 붙이는 것뿐 파일에는 저장을 못하기 때문에
+      //savePosts을 사용하여 파일에 저장 해주는 역활을 해준다.
       savePosts(posts);
       //크롬 네트워크 create의 상태가 302이라고 나온게 요청이 끝나면 302로 "/"으로 다시 돌아가서 http://localhost/로 다시 요청하는 방식이다.
       res.writeHead(302, { Location: "/" });
@@ -151,6 +159,7 @@ const server = http.createServer((req, res) => {
     });
   }
   // 글 수정 페이지
+  // /edit/는 /edit/{id}형태로만 요청 한걸 처리한다
   else if (url.startsWith("/edit/") && method === "GET") {
     const postId = parseInt(url.split("/")[2]);
     const posts = loadPosts();
