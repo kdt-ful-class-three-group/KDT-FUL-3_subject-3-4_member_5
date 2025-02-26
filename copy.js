@@ -166,6 +166,9 @@ const server = http.createServer((req, res) => {
     const posts = loadPosts();
     const post = posts.find((p) => p.id === postId);
     if (post) {
+      //리스트에서 수정하고 싶은 글에 수정를 누르면 아래 html로 들어가진다.
+      //id로 검색하여 원하는 글을 수정하는 부분이다.
+      //수정 버튼을 눌러 다시 글작서을 하는 방식으로 type="submit"로 POST로 넘겨 다시 글을 작성하는 방식이다.
       const html = `
                   <h1>글 수정</h1>
                   <form method="POST" action="/update/${post.id}">
@@ -190,26 +193,40 @@ const server = http.createServer((req, res) => {
       body += chunk.toString();
     });
     req.on("end", () => {
+      //body로 받았을때 키-값 형태의 객체로 변환
       const postData = querystring.parse(body);
+      //각각 데이터 대입
       const { title, content } = postData;
       const posts = loadPosts();
+      //게시글 목록에서 postId와 일치하는 글을 찾아서 인덱스를 반환
       const postIndex = posts.findIndex((p) => p.id === postId);
       if (postIndex !== -1) {
+        //찾은 글의 title을 수정된 title로 바꾸는 것
         posts[postIndex].title = title;
+        //찾은 글의 content을 수정된 content로 바꾸는 것
         posts[postIndex].content = content;
+        //수정된 게시글을 다시 파일에 저장
         savePosts(posts);
       }
       res.writeHead(302, { Location: "/" });
-      console.log("302 작동");
+      console.log("/update/302 작동");
       res.end();
     });
   }
   // 글 삭제 처리
+  ///delete/3라고 url로 요청을 하면 3번게시물을 삭제 하라는 요청하는 방식
   else if (url.startsWith("/delete/") && method === "GET") {
+    //삭제할 id을 찾고 postID에 대입
     const postId = parseInt(url.split("/")[2]);
+    //삭제할 id하고  게시글 id하고 일치 하는지 비교 하여 맞으면 삭제 후
+    //새로운 배열을 만듬
     const posts = loadPosts().filter((p) => p.id !== postId);
+    // 삭제후 새로운 배열을 저장할 파일에 저장
     savePosts(posts);
+    //삭제후 "/"로 이동
     res.writeHead(302, { Location: "/" });
+    //삭제 확인
+    console.log(`${postId}삭제`);
     res.end();
   } else {
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
