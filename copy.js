@@ -95,6 +95,7 @@ const server = http.createServer((req, res) => {
     //데이터가 undefined이면 else로 가서 404다 라는 식으로 HTML을 보여준다.
     else {
       res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      console.log("post에서의 에러");
       res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
     }
   }
@@ -177,6 +178,7 @@ const server = http.createServer((req, res) => {
       res.end(html);
     } else {
       res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      console.log("edit에서의 에러");
       res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
     }
   }
@@ -198,6 +200,7 @@ const server = http.createServer((req, res) => {
         savePosts(posts);
       }
       res.writeHead(302, { Location: "/" });
+      console.log("302 작동");
       res.end();
     });
   }
@@ -210,6 +213,7 @@ const server = http.createServer((req, res) => {
     res.end();
   } else {
     res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+    console.log("delete에서의 에러");
     res.end("<h1>404 - 페이지를 찾을 수 없음</h1>");
   }
 });
